@@ -74,6 +74,9 @@ namespace UserProfilesConsoleApp
             }
         }
 
+        /// <summary>
+        /// Documentation of how to use commands
+        /// </summary>
         public static void IntroductoryMessage()
         {
             Console.Clear();
@@ -145,6 +148,11 @@ namespace UserProfilesConsoleApp
             }
         }
 
+        /// <summary>
+        /// Send Request to login user
+        /// </summary>
+        /// <param name="args">Login Command Parameters</param>
+        /// <returns></returns>
         private static async Task LoginUserAsync(string[] args)
         {
             if (args.Length != 4)
