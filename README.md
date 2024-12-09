@@ -6,7 +6,7 @@
 
 1. As a User, I want to be able to create a profile.
    - Register and Login UI
-2. As a admin User, I want to brows and edit all our User Profile
+2. As a admin User, I want to browse and edit all our User Profile
    - View all Users and Delete a User
 3. As a User I want to be able to add friends and accept a friend request
    - Send and accept friend request

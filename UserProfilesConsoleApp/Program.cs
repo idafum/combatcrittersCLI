@@ -1,4 +1,5 @@
-﻿using System.Net;
+using System.Net;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using UserProfilesConsoleApp.Models;
@@ -32,7 +33,8 @@ namespace UserProfilesConsoleApp
         private static readonly Dictionary<string, Func<string[], Task>> commands = new Dictionary<string, Func<string[], Task>>
         {
             { "critter register", RegisterUserAsync },
-            { "critter login", LoginUserAsync},
+            { "critter login", LoginUserAsync },
+            { "critter admin", AdminFunctionsAsync}, //Admin Command
         };
 
         static async Task Main(string[] args)
@@ -92,6 +94,11 @@ namespace UserProfilesConsoleApp
             Console.WriteLine("Login: Login in");
             Console.WriteLine("Command: 'critter login <username> <password>' ");
             Console.WriteLine();
+            Console.WriteLine("'Admin function': Get all Users");
+            Console.WriteLine("Command: 'critter admin users'");
+            Console.WriteLine();
+            Console.WriteLine("'Admin function: Delete a User");
+            Console.WriteLine("Command: 'critter admin remove <userid>'");
             Console.WriteLine("------------------------------------------------------");
 
             Console.WriteLine("Enter 'Exit' to close");
@@ -197,6 +204,103 @@ namespace UserProfilesConsoleApp
                 Console.WriteLine($"An error occurred: {e.Message}");
             }
 
+        }
+
+        /// <summary>
+        /// Handle Admin Commands
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static async Task AdminFunctionsAsync(string[] args)
+        {
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Invalid command. Please use 'critter admin users' or 'critter admin remove <userid>'.");
+                return;
+            }
+
+            string adminCommand = args[2];
+
+            switch (adminCommand)
+            {
+                case "users":
+                    await GetAllUsersAsync();
+                    break;
+                case "remove":
+                    if (args.Length < 4)
+                    {
+                        Console.WriteLine("Please provide a user ID to remove. Usage: 'critter admin remove <userid>'.");
+                    }
+                    else
+                    {
+                        string userIdString = args[3];
+                        if (int.TryParse(userIdString, out int userId))
+                        {
+                            await DeleteUserAsync(userId);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Invalid user ID: '{userIdString}. Please provide a valid integer.");
+                        }
+                    }
+                    break;
+                default:
+                    Console.WriteLine($"Unknown admin command '{adminCommand}'.");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Send Request to Get all Users
+        /// </summary>
+        /// <returns></returns>
+        private static async Task GetAllUsersAsync()
+        {
+            try
+            {
+                Console.WriteLine("Getting All Users...");
+
+                var users = await client.GetFromJsonAsync<List<User>>("/admin/users");
+                users?.ForEach(Console.WriteLine);
+                Console.WriteLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// Send request to remove a user
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        private static async Task DeleteUserAsync(int userId)
+        {
+            try
+            {
+                Console.WriteLine($"Attempting to delete user {userId}");
+
+                using HttpResponseMessage response = await client.DeleteAsync($"/admin/users/{userId}");
+                WriteRequestToConsole(response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"User {userId} removed successfully!");
+                    Console.WriteLine();
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                    Console.WriteLine();
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
+            }
         }
 
         /// <summary>
