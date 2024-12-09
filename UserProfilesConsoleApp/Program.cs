@@ -1,7 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.DependencyInjection;
 using UserProfilesConsoleApp.Models;
 
 namespace UserProfilesConsoleApp
@@ -9,11 +14,13 @@ namespace UserProfilesConsoleApp
     class Program
     {
         private static readonly HttpClient client;
+        private static readonly CookieContainer cookieContainer;
+        private static int currentUserId;
 
         //Static Constructor
         static Program()
         {
-            var cookieContainer = new CookieContainer();
+            cookieContainer = new CookieContainer();
 
             //This handler will establish a new connection to the server after 30 min
             //This will respect DNS changes and manage resources
@@ -38,7 +45,7 @@ namespace UserProfilesConsoleApp
             { "critter register", RegisterUserAsync },
             { "critter login", LoginUserAsync },
             { "critter admin", AdminFunctionsAsync }, //Admin Command
-            { "critter friends" FriendFunctionsAsync }
+            { "critter friends", FriendFunctionsAsync },
         };
 
         static async Task Main(string[] args)
@@ -206,8 +213,19 @@ namespace UserProfilesConsoleApp
                 WriteRequestToConsole(response);
                 if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"User '{username}' is logged in successfully.");
-                    Console.WriteLine();
+                    // Deserialize the response to extract the user ID
+                    var responseData = await response.Content.ReadFromJsonAsync<User>();
+                    if (responseData != null)
+                    {
+                        currentUserId = responseData.id;
+                        Console.WriteLine(
+                            $"User '{username}' logged in successfully with ID: {currentUserId}."
+                        );
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to parse login response.");
+                    }
                 }
                 else
                 {
@@ -338,7 +356,9 @@ namespace UserProfilesConsoleApp
         {
             if (args.Length < 3)
             {
-                Console.WriteLine("Invalid command. Please refer to the help section for the correct usage.");
+                Console.WriteLine(
+                    "Invalid command. Please refer to the help section for the correct usage."
+                );
                 return;
             }
 
@@ -350,17 +370,16 @@ namespace UserProfilesConsoleApp
                     await GetAllFriendsAsync();
                     break;
                 case "pending":
-                    await GetPendingFriendRequestAsync();
+                    // await GetPendingFriendRequestAsync();
                     break;
                 case "add":
                     if (args.Length < 4)
                     {
                         Console.WriteLine("Usage: critter friends add <userid>");
-
                     }
                     else if (int.TryParse(args[3], out int userId))
                     {
-                        await AcceptFriendRequestAsync(userId);
+                        //    await AcceptFriendRequestAsync(userId);
                     }
                     else
                     {
@@ -370,7 +389,19 @@ namespace UserProfilesConsoleApp
                 default:
                     Console.WriteLine($"Unknown action '{friendCommand}' for friends command.");
                     break;
+            }
+        }
 
+        private static async Task GetAllFriendsAsync()
+        {
+            try
+            {
+                Console.WriteLine("Getting all Friends..");
+                //var friends = await client.GetFromJsonAsync<List<User>>("/users/")
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
             }
         }
 
