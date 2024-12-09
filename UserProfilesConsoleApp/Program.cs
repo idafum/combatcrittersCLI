@@ -392,12 +392,29 @@ namespace UserProfilesConsoleApp
             }
         }
 
+        /// <summary>
+        /// Send Request to get all Users friends
+        /// </summary>
+        /// <returns></returns>
         private static async Task GetAllFriendsAsync()
         {
             try
             {
                 Console.WriteLine("Getting all Friends..");
-                //var friends = await client.GetFromJsonAsync<List<User>>("/users/")
+                var friends = await client.GetFromJsonAsync<List<User>>(
+                    $"/users/{currentUserId}/friends"
+                );
+                if (friends != null && friends.Any())
+                {
+                    foreach (var friend in friends)
+                    {
+                        Console.WriteLine($"ID: {friend.id}, Username: {friend.username}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No friends found.");
+                }
             }
             catch (Exception e)
             {
