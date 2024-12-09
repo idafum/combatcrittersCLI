@@ -99,8 +99,6 @@ namespace UserProfilesConsoleApp
             Console.WriteLine("Type the commands below to perform User Profiles Operations");
             Console.WriteLine();
             DisplayCommands();
-
-
         }
 
         private static void DisplayCommands()
