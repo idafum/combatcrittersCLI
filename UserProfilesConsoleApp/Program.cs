@@ -1,12 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.DependencyInjection;
 using UserProfilesConsoleApp.Models;
 
 namespace UserProfilesConsoleApp
@@ -15,7 +10,7 @@ namespace UserProfilesConsoleApp
     {
         private static readonly HttpClient client;
         private static readonly CookieContainer cookieContainer;
-        private static int currentUserId;
+        private static int? currentUserId;
 
         //Static Constructor
         static Program()
@@ -117,8 +112,8 @@ namespace UserProfilesConsoleApp
             Console.WriteLine("Pending Friend Request: View Pending Friend Request");
             Console.WriteLine("Command: 'critter friends pending");
             Console.WriteLine();
-            Console.WriteLine("Accept Friend Request: Accept a friend");
-            Console.WriteLine("Command: 'critter friends add <userid>");
+            Console.WriteLine("Send Friend Request: Sends a Friend Request");
+            Console.WriteLine("Command: 'critter friends add <username>");
             Console.WriteLine();
 
             Console.WriteLine("------------------------------------------------------");
@@ -370,20 +365,16 @@ namespace UserProfilesConsoleApp
                     await GetAllFriendsAsync();
                     break;
                 case "pending":
-                    // await GetPendingFriendRequestAsync();
+                    await GetPendingFriendRequestAsync();
                     break;
                 case "add":
                     if (args.Length < 4)
                     {
-                        Console.WriteLine("Usage: critter friends add <userid>");
-                    }
-                    else if (int.TryParse(args[3], out int userId))
-                    {
-                        //    await AcceptFriendRequestAsync(userId);
+                        Console.WriteLine("Usage: critter friends add <username>");
                     }
                     else
                     {
-                        Console.WriteLine("Invalid user ID. Please provide a numeric user ID.");
+                        await SendFriendRequestAsync(args[3]);
                     }
                     break;
                 default:
@@ -414,6 +405,83 @@ namespace UserProfilesConsoleApp
                 else
                 {
                     Console.WriteLine("No friends found.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Send Request to get Pending friend request
+        /// </summary>
+        /// <returns></returns>
+        private static async Task GetPendingFriendRequestAsync()
+        {
+            if (currentUserId == null)
+            {
+                Console.WriteLine("User is not logged in.");
+                return;
+            }
+            try
+            {
+                Console.WriteLine("Retrieving pending friend requests...");
+                var pendingRequests = await client.GetFromJsonAsync<List<User>>(
+                    $"/users/{currentUserId}/friends/pending"
+                );
+                if (pendingRequests != null && pendingRequests.Any())
+                {
+                    foreach (var request in pendingRequests)
+                    {
+                        Console.WriteLine($"User ID: {request.id}, UserName: {request.username}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No pending friend requests.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Send Request to accept a friend Request
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        private static async Task SendFriendRequestAsync(string username)
+        {
+            if (currentUserId == null)
+            {
+                Console.WriteLine("User is not logged in.");
+                return;
+            }
+
+            var payload = new { username };
+            try
+            {
+                Console.WriteLine($"Sending friend request to username: {username}...");
+
+                using StringContent jsonContent =
+                    new(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                using HttpResponseMessage response = await client.PostAsync(
+                    $"/users/{currentUserId}/friends",
+                    jsonContent
+                );
+                WriteRequestToConsole(response);
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Request sent successfully.");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"Failed to send friend request. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}"
+                    );
                 }
             }
             catch (Exception e)
