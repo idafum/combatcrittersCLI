@@ -70,6 +70,11 @@ namespace UserProfilesConsoleApp
                 string commandKey =
                     $"{inputParts[0]} {(inputParts.Length > 1 ? inputParts[1] : string.Empty)}".Trim();
 
+                if (inputParts.Length == 2 && commandKey == "critter help")
+                {
+                    DisplayCommands();
+                    continue;
+                }
                 //Check if the command exists in the dictionary
                 if (commands.TryGetValue(commandKey, out var action))
                 {
@@ -93,6 +98,13 @@ namespace UserProfilesConsoleApp
             Console.WriteLine();
             Console.WriteLine("Type the commands below to perform User Profiles Operations");
             Console.WriteLine();
+            DisplayCommands();
+
+
+        }
+
+        private static void DisplayCommands()
+        {
             Console.WriteLine("------------------------------------------------------");
             Console.WriteLine("Register: Create a new account");
             Console.WriteLine("Command: 'critter register <username> <password>' ");
@@ -113,11 +125,13 @@ namespace UserProfilesConsoleApp
             Console.WriteLine("Command: 'critter friends pending");
             Console.WriteLine();
             Console.WriteLine("Send Friend Request: Sends a Friend Request");
-            Console.WriteLine("Command: 'critter friends add <username>");
+            Console.WriteLine("Command: 'critter friends add <username>'");
+            Console.WriteLine();
+            Console.WriteLine("Help: See all cli commandds");
+            Console.WriteLine("Command: 'critter help'");
             Console.WriteLine();
 
             Console.WriteLine("------------------------------------------------------");
-
             Console.WriteLine("Enter 'Exit' to close");
         }
 
