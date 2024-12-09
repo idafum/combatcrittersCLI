@@ -206,6 +206,11 @@ namespace UserProfilesConsoleApp
 
         }
 
+        /// <summary>
+        /// Handle Admin Commands
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private static async Task AdminFunctionsAsync(string[] args)
         {
             if (args.Length < 3)
@@ -245,6 +250,10 @@ namespace UserProfilesConsoleApp
             }
         }
 
+        /// <summary>
+        /// Send Request to Get all Users
+        /// </summary>
+        /// <returns></returns>
         private static async Task GetAllUsersAsync()
         {
             try
@@ -260,9 +269,38 @@ namespace UserProfilesConsoleApp
                 Console.WriteLine($"An error occurred: {e.Message}");
             }
         }
+
+
+        /// <summary>
+        /// Send request to remove a user
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         private static async Task DeleteUserAsync(int userId)
         {
+            try
+            {
+                Console.WriteLine($"Attempting to delete user {userId}");
 
+                using HttpResponseMessage response = await client.DeleteAsync($"/admin/users/{userId}");
+                WriteRequestToConsole(response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"User {userId} removed successfully!");
+                    Console.WriteLine();
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                    Console.WriteLine();
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e.Message}");
+            }
         }
 
         /// <summary>
