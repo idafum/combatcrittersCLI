@@ -21,20 +21,24 @@ namespace UserProfilesConsoleApp
             {
                 UseCookies = true,
                 CookieContainer = cookieContainer,
-                PooledConnectionLifetime = TimeSpan.FromMinutes(30)
+                PooledConnectionLifetime = TimeSpan.FromMinutes(30),
             };
 
             client = new HttpClient(handler)
             {
-                BaseAddress = new Uri("http://api.combatcritters.ca:4000")
+                BaseAddress = new Uri("http://api.combatcritters.ca:4000"),
             };
         }
 
-        private static readonly Dictionary<string, Func<string[], Task>> commands = new Dictionary<string, Func<string[], Task>>
+        private static readonly Dictionary<string, Func<string[], Task>> commands = new Dictionary<
+            string,
+            Func<string[], Task>
+        >
         {
             { "critter register", RegisterUserAsync },
             { "critter login", LoginUserAsync },
-            { "critter admin", AdminFunctionsAsync}, //Admin Command
+            { "critter admin", AdminFunctionsAsync }, //Admin Command
+            { "critter friends" FriendFunctionsAsync }
         };
 
         static async Task Main(string[] args)
@@ -61,7 +65,8 @@ namespace UserProfilesConsoleApp
                 string[] inputParts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 //Create a Command Key
-                string commandKey = $"{inputParts[0]} {(inputParts.Length > 1 ? inputParts[1] : string.Empty)}".Trim();
+                string commandKey =
+                    $"{inputParts[0]} {(inputParts.Length > 1 ? inputParts[1] : string.Empty)}".Trim();
 
                 //Check if the command exists in the dictionary
                 if (commands.TryGetValue(commandKey, out var action))
@@ -72,7 +77,6 @@ namespace UserProfilesConsoleApp
                 {
                     Console.WriteLine($"Unknown command '{input}'");
                 }
-
             }
         }
 
@@ -99,6 +103,17 @@ namespace UserProfilesConsoleApp
             Console.WriteLine();
             Console.WriteLine("'Admin function: Delete a User");
             Console.WriteLine("Command: 'critter admin remove <userid>'");
+            Console.WriteLine();
+            Console.WriteLine("Friends: Get all Users friends");
+            Console.WriteLine("Command: 'critter friends all'");
+            Console.WriteLine();
+            Console.WriteLine("Pending Friend Request: View Pending Friend Request");
+            Console.WriteLine("Command: 'critter friends pending");
+            Console.WriteLine();
+            Console.WriteLine("Accept Friend Request: Accept a friend");
+            Console.WriteLine("Command: 'critter friends add <userid>");
+            Console.WriteLine();
+
             Console.WriteLine("------------------------------------------------------");
 
             Console.WriteLine("Enter 'Exit' to close");
@@ -123,19 +138,23 @@ namespace UserProfilesConsoleApp
             var userRegistration = new UserRegistration
             {
                 username = username,
-                password = password
+                password = password,
             };
 
             try
             {
                 Console.WriteLine($"Register user '{username}' ...");
-                using StringContent jsonContent = new(
-                    JsonSerializer.Serialize(userRegistration),
-                    Encoding.UTF8,
-                    "application/json"
-                );
+                using StringContent jsonContent =
+                    new(
+                        JsonSerializer.Serialize(userRegistration),
+                        Encoding.UTF8,
+                        "application/json"
+                    );
 
-                using HttpResponseMessage response = await client.PostAsync("/users/auth/register", jsonContent);
+                using HttpResponseMessage response = await client.PostAsync(
+                    "/users/auth/register",
+                    jsonContent
+                );
                 WriteRequestToConsole(response);
 
                 if (response.IsSuccessStatusCode)
@@ -145,7 +164,9 @@ namespace UserProfilesConsoleApp
                 else
                 {
                     string errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Failed to register user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                    Console.WriteLine(
+                        $"Failed to register user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}"
+                    );
                     Console.WriteLine($"Server Response: {errorContent}");
                 }
             }
@@ -171,21 +192,17 @@ namespace UserProfilesConsoleApp
             string username = args[2];
             string password = args[3];
 
-            var loginDetails = new LoginDetails
-            {
-                username = username,
-                password = password
-            };
+            var loginDetails = new LoginDetails { username = username, password = password };
 
             try
             {
                 Console.WriteLine($"Loggin in user '{username}'...");
-                using StringContent jsonContent = new(
-                    JsonSerializer.Serialize(loginDetails),
-                    Encoding.UTF8,
-                    "application/json"
+                using StringContent jsonContent =
+                    new(JsonSerializer.Serialize(loginDetails), Encoding.UTF8, "application/json");
+                using HttpResponseMessage response = await client.PostAsync(
+                    "/users/auth/login",
+                    jsonContent
                 );
-                using HttpResponseMessage response = await client.PostAsync("/users/auth/login", jsonContent);
                 WriteRequestToConsole(response);
                 if (response.IsSuccessStatusCode)
                 {
@@ -195,7 +212,9 @@ namespace UserProfilesConsoleApp
                 else
                 {
                     string errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                    Console.WriteLine(
+                        $"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}"
+                    );
                     Console.WriteLine($"Server Response: {errorContent}");
                 }
             }
@@ -203,7 +222,6 @@ namespace UserProfilesConsoleApp
             {
                 Console.WriteLine($"An error occurred: {e.Message}");
             }
-
         }
 
         /// <summary>
@@ -215,7 +233,9 @@ namespace UserProfilesConsoleApp
         {
             if (args.Length < 3)
             {
-                Console.WriteLine("Invalid command. Please use 'critter admin users' or 'critter admin remove <userid>'.");
+                Console.WriteLine(
+                    "Invalid command. Please use 'critter admin users' or 'critter admin remove <userid>'."
+                );
                 return;
             }
 
@@ -229,7 +249,9 @@ namespace UserProfilesConsoleApp
                 case "remove":
                     if (args.Length < 4)
                     {
-                        Console.WriteLine("Please provide a user ID to remove. Usage: 'critter admin remove <userid>'.");
+                        Console.WriteLine(
+                            "Please provide a user ID to remove. Usage: 'critter admin remove <userid>'."
+                        );
                     }
                     else
                     {
@@ -240,7 +262,9 @@ namespace UserProfilesConsoleApp
                         }
                         else
                         {
-                            Console.WriteLine($"Invalid user ID: '{userIdString}. Please provide a valid integer.");
+                            Console.WriteLine(
+                                $"Invalid user ID: '{userIdString}. Please provide a valid integer."
+                            );
                         }
                     }
                     break;
@@ -270,7 +294,6 @@ namespace UserProfilesConsoleApp
             }
         }
 
-
         /// <summary>
         /// Send request to remove a user
         /// </summary>
@@ -282,7 +305,9 @@ namespace UserProfilesConsoleApp
             {
                 Console.WriteLine($"Attempting to delete user {userId}");
 
-                using HttpResponseMessage response = await client.DeleteAsync($"/admin/users/{userId}");
+                using HttpResponseMessage response = await client.DeleteAsync(
+                    $"/admin/users/{userId}"
+                );
                 WriteRequestToConsole(response);
 
                 if (response.IsSuccessStatusCode)
@@ -292,14 +317,60 @@ namespace UserProfilesConsoleApp
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}");
+                    Console.WriteLine(
+                        $"Failed to log in user. Status Code: {(int)response.StatusCode} - {response.ReasonPhrase}"
+                    );
                     Console.WriteLine();
                 }
-
             }
             catch (Exception e)
             {
                 Console.WriteLine($"An error occurred: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle Friends Command
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static async Task FriendFunctionsAsync(string[] args)
+        {
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Invalid command. Please refer to the help section for the correct usage.");
+                return;
+            }
+
+            string friendCommand = args[2];
+
+            switch (friendCommand)
+            {
+                case "all":
+                    await GetAllFriendsAsync();
+                    break;
+                case "pending":
+                    await GetPendingFriendRequestAsync();
+                    break;
+                case "add":
+                    if (args.Length < 4)
+                    {
+                        Console.WriteLine("Usage: critter friends add <userid>");
+
+                    }
+                    else if (int.TryParse(args[3], out int userId))
+                    {
+                        await AcceptFriendRequestAsync(userId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid user ID. Please provide a numeric user ID.");
+                    }
+                    break;
+                default:
+                    Console.WriteLine($"Unknown action '{friendCommand}' for friends command.");
+                    break;
+
             }
         }
 
@@ -318,6 +389,5 @@ namespace UserProfilesConsoleApp
             Console.Write($"{request?.RequestUri} ");
             Console.WriteLine($"HTTP/{request?.Version}");
         }
-
     }
 }
