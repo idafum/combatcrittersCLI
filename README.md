@@ -1,4 +1,4 @@
-# UserProfiledConsoleApp
+# UserProfilesConsoleApp
 
 This .NET console application interacts with user profiles
 
